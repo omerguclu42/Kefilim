@@ -4,17 +4,49 @@ import {
   ShieldCheck, HelpCircle, Target, Users, 
   BarChart3, ArrowLeft, CheckCircle2, 
   Zap, Scale, HeartHandshake, Award,
-  FileCheck, Key, Shield, ArrowRight, FileText
+  FileCheck, Key, Shield, ArrowRight, FileText, Briefcase,
+  Building, Plus, LogOut, Bell, AlertCircle, UploadCloud, CheckCircle, MapPin
 } from 'lucide-react';
 
-const App = () => {
-  const [view, setView] = useState('home'); // 'home', 'about', 'how-it-works', 'security'
+const mockDB = [
+  { id: 1, email: 'omerguclu42@gmail.com', password: '123456', role: 'tenant', name: 'Ömer Güçlü', title: 'Kiracı Adayı', isProfileComplete: false, score: null },
+  { id: 2, email: 'omerguclu43@gmail.com', password: '123456', role: 'landlord', name: 'Ömer Güçlü', title: 'Ev Sahibi', isProfileComplete: true, score: 920 },
+  { id: 3, email: 'omerguclu44@gmail.com', password: '123456', role: 'agent', name: 'Güçlü Emlak', title: 'Gayrimenkul Danışmanı', isProfileComplete: true, score: 950 }
+];
+
+const COLORS = {
+  navy: '#003049',
+  orange: '#E76F2E'
+};
+
+export default function App() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [dashboardView, setDashboardView] = useState('home');
+
+  if (currentUser) {
+    return <DashboardLayout currentUser={currentUser} setCurrentUser={setCurrentUser} activeView={dashboardView} setActiveView={setDashboardView} />;
+  }
+
+  return <LandingPage onLogin={(user) => { setCurrentUser(user); setDashboardView('home'); }} />;
+}
+
+const LandingPage = ({ onLogin }) => {
+  const [view, setView] = useState('home'); 
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState('tenant');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const COLORS = {
-    navy: '#003049',
-    orange: '#E76F2E'
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    if (isLogin) {
+      const user = mockDB.find(u => u.email === email && u.password === password);
+      if (user) onLogin(user);
+      else setError('Hatalı e-posta veya şifre! Lütfen test hesaplarını kullanın.');
+    } else {
+      onLogin({ id: Date.now(), email, password, role, name: 'Yeni Kullanıcı', title: role === 'tenant' ? 'Aday' : 'Ev Sahibi', isProfileComplete: false, score: null });
+    }
   };
 
   const Logo = () => (
@@ -32,13 +64,13 @@ const App = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl -z-10 animate-pulse"></div>
         <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl -z-10 animate-pulse delay-700"></div>
         <h2 className="text-6xl md:text-7xl font-black tracking-tighter leading-tight" style={{ color: COLORS.navy }}>
-          Kiralama Dünyasında <br />
+          Gayrimenkul Dünyasında <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400">
             Güvenin Yeni Adı.
           </span>
         </h2>
         <p className="text-xl md:text-2xl text-slate-500 leading-relaxed font-medium max-w-2xl mx-auto">
-          Emlak piyasasının en büyük sorunu olan "güvensizliği" teknolojiyle bitiriyoruz. Kefilim, kiracı ve ev sahibini şeffaf, doğrulanmış ve adil bir platformda buluşturur.
+          Emlak piyasasının en büyük sorunu olan "güvensizliği" teknolojiyle bitiriyoruz. Kefilim; kiralama ve ev satışı süreçlerinde tüm tarafları şeffaf, doğrulanmış ve adil bir platformda buluşturur.
         </p>
       </div>
 
@@ -68,7 +100,7 @@ const App = () => {
         <h2 className="text-5xl md:text-6xl font-black tracking-tighter" style={{ color: COLORS.navy }}>
           Süreç Nasıl <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400">İşliyor?</span>
         </h2>
-        <p className="text-xl text-slate-500 font-medium">Karmaşık kiralama süreçlerini herkes için çok basit 3 adıma indirdik.</p>
+        <p className="text-xl text-slate-500 font-medium">Karmaşık kiralama ve satış süreçlerini herkes için çok basit 3 adıma indirdik.</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-12">
@@ -80,7 +112,7 @@ const App = () => {
             <div className="p-4 bg-orange-50 rounded-2xl">
               <User size={36} className="text-orange-500" />
             </div>
-            <h3 className="text-4xl font-black tracking-tight" style={{ color: COLORS.navy }}>Kiracılar İçin</h3>
+            <h3 className="text-4xl font-black tracking-tight" style={{ color: COLORS.navy }}>Kiracı ve Alıcılar İçin</h3>
           </div>
           
           <div className="space-y-10 relative z-10">
@@ -110,14 +142,14 @@ const App = () => {
             <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10">
               <Home size={36} className="text-orange-400" />
             </div>
-            <h3 className="text-4xl font-black tracking-tight text-white">Ev Sahipleri İçin</h3>
+            <h3 className="text-4xl font-black tracking-tight text-white">Ev Sahibi ve Emlakçılar İçin</h3>
           </div>
           
           <div className="space-y-10 relative z-10">
             {[
-              { title: "İlanını ve Kriterlerini Belirle", desc: "Evini sisteme kaydet, detayları gir ve aradığın minimum Kefilim skorunu belirleyerek doğru kitleyi hedefle." },
-              { title: "Doğrulanmış Başvuruları İncele", desc: "Adayların beyanlarına değil; Findeks, SGK ve İcra doğrulamasından geçmiş resmi Kefilim raporlarına ve geçmiş puanlarına bak." },
-              { title: "İç Huzuruyla Anahtarı Teslim Et", desc: "Finansal kapasitesi doğrulanmış, referansları tam olan en uygun kiracıyla dijital olarak eşleş ve süreci güvenle başlat." }
+              { title: "İlanını ve Kriterlerini Belirle", desc: "Kiralık veya satılık evini sisteme kaydet, detayları gir ve aradığın minimum Kefilim skorunu belirleyerek doğru kitleyi hedefle." },
+              { title: "Doğrulanmış Başvuruları İncele", desc: "Adayların beyanlarına değil; Findeks, SGK ve İcra doğrulamasından geçmiş resmi raporlara ve geçmiş puanlarına bak." },
+              { title: "İç Huzuruyla Süreci Tamamla", desc: "Finansal/güven kapasitesi doğrulanmış en uygun kiracı veya alıcıyla eşleş, kiralama veya satış sürecini güvenle el sıkışarak bitir." }
             ].map((step, i) => (
               <div key={i} className="flex gap-6 group/step">
                 <div className="w-14 h-14 shrink-0 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center font-black text-2xl text-orange-400 border border-white/5 group-hover/step:scale-110 group-hover/step:bg-orange-500 group-hover/step:text-white group-hover/step:border-orange-400 transition-all duration-300">
@@ -255,7 +287,7 @@ const App = () => {
               </h1>
               
               <p className="text-xl md:text-2xl text-slate-500 max-w-lg leading-relaxed font-medium">
-                Türkiye'nin ilk veriye dayalı kiralama ekosistemi. Belge manipülasyonuna son veriyoruz.
+                Türkiye'nin ilk veriye dayalı gayrimenkul ekosistemi. Hem kiralarken hem de evinizi satarken, uçtan uca şeffaf ve güvenilir kişilerle muhatap olduğunuz bir deneyim sunuyoruz.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-6 pt-4">
@@ -270,8 +302,8 @@ const App = () => {
                   <div className="w-12 h-12 bg-orange-50 text-orange-500 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
                     <HeartHandshake size={24} />
                   </div>
-                  <h4 className="font-black text-2xl mb-2" style={{ color: COLORS.navy }}>Çift Yönlü</h4>
-                  <p className="text-sm text-slate-500 font-medium leading-relaxed">Sadece kiracı değil, ev sahibi de güvence altındadır.</p>
+                  <h4 className="font-black text-2xl mb-2" style={{ color: COLORS.navy }}>Tüm Taraflara Güvence</h4>
+                  <p className="text-sm text-slate-500 font-medium leading-relaxed">Sistemimizde her bir taraf (kiracı, ev sahibi, alıcı, satıcı ve emlakçı) aynı şeffaflıkla güvence altındadır.</p>
                 </div>
               </div>
             </div>
@@ -294,8 +326,15 @@ const App = () => {
                 </button>
               </div>
               
-              <form className="space-y-6 relative z-10" onSubmit={(e) => e.preventDefault()}>
-                <button className="w-full py-5 border-2 border-slate-100 rounded-[1.5rem] flex items-center justify-center gap-4 font-black text-slate-600 hover:bg-slate-50 hover:border-slate-200 transition-all active:scale-95 shadow-sm bg-white group">
+              <form className="space-y-6 relative z-10" onSubmit={handleLoginSubmit}>
+                
+                {error && (
+                  <div className="bg-red-50 text-red-500 p-4 rounded-2xl mb-6 text-sm font-bold flex items-center gap-3 border border-red-100">
+                    <AlertCircle size={20}/> {error}
+                  </div>
+                )}
+                
+                <button type="button" className="w-full py-5 border-2 border-slate-100 rounded-[1.5rem] flex items-center justify-center gap-4 font-black text-slate-600 hover:bg-slate-50 hover:border-slate-200 transition-all active:scale-95 shadow-sm bg-white group">
                   <div className="bg-slate-50 p-2 rounded-full group-hover:bg-white transition-colors">
                     <img src="https://www.google.com/favicon.ico" className="w-5 h-5 drop-shadow-sm" alt="Google" />
                   </div>
@@ -310,26 +349,36 @@ const App = () => {
                 
                 <div className="space-y-5">
                   {!isLogin && (
-                    <div className="grid grid-cols-2 gap-5 pb-5 animate-in slide-in-from-top-4 duration-500">
+                    <div className="grid grid-cols-3 gap-3 pb-5 animate-in slide-in-from-top-4 duration-500">
                         <button 
                           type="button" 
                           onClick={() => setRole('tenant')} 
-                          className={`p-6 md:p-8 rounded-[2rem] border-2 flex flex-col items-center gap-4 transition-all duration-300 ${role === 'tenant' ? 'border-orange-500 bg-orange-50/80 shadow-[0_8px_20px_rgba(231,111,46,0.15)] scale-100' : 'border-slate-100 bg-slate-50/50 text-slate-400 hover:bg-slate-50 hover:scale-[1.02]'}`}
+                          className={`p-4 md:p-6 rounded-3xl border-2 flex flex-col items-center gap-3 transition-all duration-300 ${role === 'tenant' ? 'border-orange-500 bg-orange-50/80 shadow-[0_8px_20px_rgba(231,111,46,0.15)] scale-100' : 'border-slate-100 bg-slate-50/50 text-slate-400 hover:bg-slate-50 hover:scale-[1.02]'}`}
                         >
-                          <div className={`p-3 rounded-2xl ${role === 'tenant' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-slate-300 shadow-sm'}`}>
-                            <User size={28} />
+                          <div className={`p-2.5 rounded-xl ${role === 'tenant' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-slate-300 shadow-sm'}`}>
+                            <User size={24} />
                           </div>
-                          <span className={`text-sm font-black uppercase tracking-wider ${role === 'tenant' ? 'text-orange-700' : ''}`}>KİRACIYIM</span>
+                          <span className={`text-[10px] md:text-xs font-black uppercase tracking-wider ${role === 'tenant' ? 'text-orange-700' : ''}`}>KİRACI/<br/>ALICI</span>
                         </button>
                         <button 
                           type="button" 
                           onClick={() => setRole('landlord')} 
-                          className={`p-6 md:p-8 rounded-[2rem] border-2 flex flex-col items-center gap-4 transition-all duration-300 ${role === 'landlord' ? 'border-[#003049] bg-[#003049]/5 shadow-[0_8px_20px_rgba(0,48,73,0.15)] scale-100' : 'border-slate-100 bg-slate-50/50 text-slate-400 hover:bg-slate-50 hover:scale-[1.02]'}`}
+                          className={`p-4 md:p-6 rounded-3xl border-2 flex flex-col items-center gap-3 transition-all duration-300 ${role === 'landlord' ? 'border-[#003049] bg-[#003049]/5 shadow-[0_8px_20px_rgba(0,48,73,0.15)] scale-100' : 'border-slate-100 bg-slate-50/50 text-slate-400 hover:bg-slate-50 hover:scale-[1.02]'}`}
                         >
-                          <div className={`p-3 rounded-2xl ${role === 'landlord' ? 'bg-[#003049] text-white shadow-md' : 'bg-white text-slate-300 shadow-sm'}`}>
-                            <Home size={28} />
+                          <div className={`p-2.5 rounded-xl ${role === 'landlord' ? 'bg-[#003049] text-white shadow-md' : 'bg-white text-slate-300 shadow-sm'}`}>
+                            <Home size={24} />
                           </div>
-                          <span className={`text-sm font-black uppercase tracking-wider ${role === 'landlord' ? 'text-[#003049]' : ''}`}>EV SAHİBİYİM</span>
+                          <span className={`text-[10px] md:text-xs font-black uppercase tracking-wider text-center leading-tight ${role === 'landlord' ? 'text-[#003049]' : ''}`}>EV SAHİBİ/<br/>SATICI</span>
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => setRole('agent')} 
+                          className={`p-4 md:p-6 rounded-3xl border-2 flex flex-col items-center gap-3 transition-all duration-300 ${role === 'agent' ? 'border-blue-500 bg-blue-50/80 shadow-[0_8px_20px_rgba(59,130,246,0.15)] scale-100' : 'border-slate-100 bg-slate-50/50 text-slate-400 hover:bg-slate-50 hover:scale-[1.02]'}`}
+                        >
+                          <div className={`p-2.5 rounded-xl ${role === 'agent' ? 'bg-blue-500 text-white shadow-md' : 'bg-white text-slate-300 shadow-sm'}`}>
+                            <Briefcase size={24} />
+                          </div>
+                          <span className={`text-[10px] md:text-xs font-black uppercase tracking-wider text-center leading-tight ${role === 'agent' ? 'text-blue-700' : ''}`}>EMLAKÇI/<br/>DANIŞMAN</span>
                         </button>
                     </div>
                   )}
@@ -337,7 +386,7 @@ const App = () => {
                   {!isLogin && (
                     <div className="relative group animate-in slide-in-from-top-2 duration-300">
                       <FileText className="absolute left-6 top-[1.35rem] text-slate-400 group-focus-within:text-orange-500 transition-colors" size={22} />
-                      <input type="text" placeholder="T.C. Kimlik Numarası" maxLength="11" className="w-full pl-16 pr-6 py-5 bg-slate-50/80 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-[1.5rem] transition-all outline-none text-base font-semibold text-slate-700 shadow-sm placeholder:text-slate-400" />
+                      <input type="text" placeholder={role === 'agent' ? "T.C. Kimlik / Vergi Numarası" : "T.C. Kimlik Numarası"} maxLength="11" className="w-full pl-16 pr-6 py-5 bg-slate-50/80 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-[1.5rem] transition-all outline-none text-base font-semibold text-slate-700 shadow-sm placeholder:text-slate-400" />
                     </div>
                   )}
                   
@@ -349,11 +398,11 @@ const App = () => {
                   )}
                   <div className="relative group">
                     <Mail className="absolute left-6 top-[1.35rem] text-slate-400 group-focus-within:text-orange-500 transition-colors" size={22} />
-                    <input type="email" placeholder="E-posta Adresi" className="w-full pl-16 pr-6 py-5 bg-slate-50/80 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-[1.5rem] transition-all outline-none text-base font-semibold text-slate-700 shadow-sm placeholder:text-slate-400" />
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="E-posta Adresi" className="w-full pl-16 pr-6 py-5 bg-slate-50/80 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-[1.5rem] transition-all outline-none text-base font-semibold text-slate-700 shadow-sm placeholder:text-slate-400" />
                   </div>
                   <div className="relative group">
                     <Lock className="absolute left-6 top-[1.35rem] text-slate-400 group-focus-within:text-orange-500 transition-colors" size={22} />
-                    <input type="password" placeholder="Şifreniz" className="w-full pl-16 pr-6 py-5 bg-slate-50/80 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-[1.5rem] transition-all outline-none text-base font-semibold text-slate-700 shadow-sm placeholder:text-slate-400" />
+                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Şifreniz" className="w-full pl-16 pr-6 py-5 bg-slate-50/80 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-[1.5rem] transition-all outline-none text-base font-semibold text-slate-700 shadow-sm placeholder:text-slate-400" />
                   </div>
                 </div>
 
@@ -364,6 +413,7 @@ const App = () => {
                 )}
 
                 <button 
+                  type="submit"
                   className="w-full py-6 rounded-[1.5rem] text-white font-black text-xl shadow-[0_20px_40px_-10px_rgba(231,111,46,0.6)] hover:shadow-[0_25px_50px_-12px_rgba(231,111,46,0.7)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 group relative overflow-hidden" 
                   style={{ backgroundColor: COLORS.orange }}
                 >
@@ -371,6 +421,17 @@ const App = () => {
                   <span className="relative z-10">{isLogin ? 'Giriş Yap' : 'Hemen Başla'}</span>
                   <ChevronRight size={24} className="relative z-10 group-hover:translate-x-1 transition-transform" />
                 </button>
+
+                {isLogin && (
+                  <div className="mt-6 pt-6 border-t border-slate-100/80 text-center animate-in slide-in-from-bottom-2">
+                    <p className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">Test İçin Hızlı Doldur</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button type="button" onClick={() => {setEmail('omerguclu42@gmail.com'); setPassword('123456');}} className="text-[10px] bg-slate-100 hover:bg-[#003049] hover:text-white py-2.5 rounded-xl text-[#003049] font-bold transition-colors shadow-sm">Kiracı</button>
+                      <button type="button" onClick={() => {setEmail('omerguclu43@gmail.com'); setPassword('123456');}} className="text-[10px] bg-slate-100 hover:bg-[#003049] hover:text-white py-2.5 rounded-xl text-[#003049] font-bold transition-colors shadow-sm">Ev Sahibi</button>
+                      <button type="button" onClick={() => {setEmail('omerguclu44@gmail.com'); setPassword('123456');}} className="text-[10px] bg-slate-100 hover:bg-[#003049] hover:text-white py-2.5 rounded-xl text-[#003049] font-bold transition-colors shadow-sm">Emlakçı</button>
+                    </div>
+                  </div>
+                )}
               </form>
             </div>
           </main>
@@ -391,4 +452,229 @@ const App = () => {
   );
 };
 
-export default App;
+// ==========================================
+// ALT BİLEŞENLER (DASHBOARD)
+// ==========================================
+
+const DashboardLayout = ({ currentUser, setCurrentUser, activeView, setActiveView }) => {
+  const handleLogout = () => setCurrentUser(null);
+  
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] font-sans flex overflow-hidden selection:bg-orange-500 selection:text-white">
+      {/* SOL MENÜ (SIDEBAR) */}
+      <aside className="w-72 bg-white border-r border-slate-100 hidden md:flex flex-col shadow-2xl shadow-slate-200/20 z-20">
+        <div className="p-8 pb-6 flex items-center gap-3 cursor-pointer" onClick={() => setActiveView('home')}>
+          <ShieldCheck className="w-10 h-10 text-[#E76F2E]" />
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-[#003049] leading-none">KEFİLİM</h1>
+            <p className="text-[#E76F2E] text-[10px] font-bold tracking-widest uppercase mt-1">Güven Sistemi</p>
+          </div>
+        </div>
+
+        <nav className="flex-1 px-4 mt-4 space-y-2">
+          <MenuButton icon={<Home />} label="Kontrol Paneli" isActive={activeView === 'home'} onClick={() => setActiveView('home')} />
+          {currentUser.role === 'tenant' && (
+            <>
+              <MenuButton icon={<User />} label="Profilimi Tamamla" isActive={activeView === 'profile'} onClick={() => setActiveView('profile')} badge={!currentUser.isProfileComplete ? "Eksik" : null} />
+              <MenuButton icon={<Search />} label="İlan Ara" isActive={activeView === 'search'} onClick={() => currentUser.isProfileComplete ? setActiveView('search') : alert("Lütfen önce profilinizi tamamlayın!")} disabled={!currentUser.isProfileComplete} />
+              <MenuButton icon={<FileText />} label="Başvurularım" isActive={false} onClick={() => {}} disabled={!currentUser.isProfileComplete} />
+            </>
+          )}
+          {(currentUser.role === 'landlord' || currentUser.role === 'agent') && (
+            <>
+              <MenuButton icon={<Building />} label="Aktif İlanlarım" isActive={activeView === 'search'} onClick={() => setActiveView('search')} />
+              <MenuButton icon={<Plus />} label="Yeni İlan Ekle" isActive={activeView === 'add-listing'} onClick={() => setActiveView('add-listing')} />
+              <MenuButton icon={<Users />} label="Gelen Başvurular" isActive={false} onClick={() => {}} />
+            </>
+          )}
+        </nav>
+
+        <div className="p-4 mb-4 border-t border-slate-100">
+          <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-3 border border-slate-100">
+            <div className="w-10 h-10 bg-[#003049] rounded-xl flex items-center justify-center font-bold text-white shadow-md shrink-0">
+              {currentUser.name.charAt(0)}
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <p className="text-sm font-bold truncate text-[#003049]">{currentUser.name}</p>
+              <p className="text-xs text-gray-500 truncate font-medium">{currentUser.title}</p>
+            </div>
+            <button onClick={handleLogout} className="text-gray-400 hover:text-red-500 transition-colors p-2 bg-white rounded-lg border border-slate-200 shadow-sm hover:bg-red-50">
+              <LogOut size={16} />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* ANA İÇERİK ALANI */}
+      <main className="flex-1 flex flex-col h-screen overflow-y-auto relative z-0">
+        <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#003049]/5 to-transparent -z-10 pointer-events-none"></div>
+        <header className="h-24 px-8 md:px-12 flex items-center justify-between z-10 sticky top-0 bg-[#F8FAFC]/80 backdrop-blur-md border-b border-slate-200/50">
+          <div>
+            <h2 className="text-xl md:text-2xl font-extrabold text-[#003049]">
+              {activeView === 'home' && 'Kontrol Paneli'}
+              {activeView === 'profile' && 'Dijital Kiracı Pasaportu'}
+              {activeView === 'add-listing' && 'İlan Yönetimi'}
+              {activeView === 'search' && 'Keşfet'}
+            </h2>
+          </div>
+          <div className="flex items-center gap-6">
+            <button className="relative p-2 text-gray-400 hover:text-[#003049] transition-colors"><Bell size={24} />{!currentUser.isProfileComplete && <span className="absolute top-1 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>}</button>
+            <div className={`hidden md:flex items-center gap-3 pl-6 border-l border-slate-200 transition-opacity ${!currentUser.isProfileComplete ? 'opacity-50 grayscale' : ''}`}>
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Kefilim Skoru</span>
+                <div className="flex items-baseline gap-1">
+                  <span className={`font-extrabold text-xl leading-none ${currentUser.isProfileComplete ? 'text-[#003049]' : 'text-gray-400'}`}>
+                    {currentUser.isProfileComplete ? currentUser.score : 'Belirsiz'}
+                  </span>
+                  {currentUser.isProfileComplete && <span className="text-emerald-500 font-bold text-sm">A+</span>}
+                </div>
+              </div>
+              <ShieldCheck className={`w-8 h-8 ${currentUser.isProfileComplete ? 'text-[#E76F2E]' : 'text-gray-300'}`} />
+            </div>
+          </div>
+        </header>
+
+        <div className="p-4 md:p-8 lg:p-12 max-w-7xl mx-auto w-full">
+          {activeView === 'home' && <Dashboard user={currentUser} changeView={setActiveView} />}
+          {activeView === 'profile' && <ProfileCompletion user={currentUser} updateUser={setCurrentUser} changeView={setActiveView} />}
+          {activeView === 'add-listing' && <AddListing changeView={setActiveView} />}
+          {activeView === 'search' && (
+            <div className="text-center py-20 flex flex-col items-center">
+              <MapPin className="w-16 h-16 text-slate-300 mb-4" />
+              <h2 className="text-2xl font-bold text-[#003049]">İlan Modülü</h2>
+              <p className="text-gray-500 font-medium">Bu ekran (Harita, ilan kartları ve filtreler) bir sonraki aşamada tasarlanacak.</p>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+const Dashboard = ({ user, changeView }) => {
+  if (user.role === 'tenant' && !user.isProfileComplete) {
+    return (
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-[#003049] mb-8">Merhaba, {user.name.split(' ')[0]}.</h1>
+        <div className="bg-gradient-to-r from-[#003049] to-[#0a4666] rounded-[3rem] p-8 md:p-14 shadow-2xl text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10">
+          <ShieldCheck className="absolute -right-20 -bottom-20 w-80 h-80 text-white opacity-5" />
+          <div className="relative z-10 max-w-2xl">
+            <div className="inline-flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full font-bold text-sm mb-6 shadow-lg shadow-red-500/30"><Lock size={16} /> Profil Eksik, Sistem Kilitli</div>
+            <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">Adım Atmadan Önce<br/><span className="text-[#E76F2E]">Güvenini</span> Kanıtla!</h2>
+            <p className="text-blue-100/90 text-lg mb-8 font-medium leading-relaxed">Kefilim ekosisteminde ev arayabilmek için öncelikle e-Devlet evraklarını yükleyerek <strong>Dijital Pasaportunu</strong> oluşturman gerekiyor.</p>
+            <button onClick={() => changeView('profile')} className="bg-white text-[#003049] hover:bg-[#E76F2E] hover:text-white px-8 py-5 rounded-2xl font-black text-lg shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-3 w-full md:w-auto justify-center"><User size={24} /> Profilini Tamamla ve Kilidi Aç</button>
+          </div>
+        </div>
+        <h3 className="text-xl font-bold text-[#003049] pl-2 mt-12 mb-6 opacity-50">Kefilim Vitrini</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+          <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] z-10 rounded-[3rem] flex items-center justify-center border border-white/50">
+            <div className="bg-white px-8 py-4 rounded-2xl shadow-xl font-bold text-[#003049] flex items-center gap-3 border border-slate-100"><Lock className="w-6 h-6 text-[#E76F2E]" /> İşlem yapabilmek için profili tamamlayın</div>
+          </div>
+          <ActionCard title="Ev Kirala" desc="Doğrulanmış ilanlar arasında güvenle ara." icon={Key} disabled />
+          <ActionCard title="Ev Satın Al" desc="Uzman ekspertizli satılık konutlar." icon={Home} disabled />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-10">
+      <div>
+        <h1 className="text-3xl md:text-4xl font-extrabold text-[#003049] tracking-tight">Hoş Geldin, {user.name.split(' ')[0]}.</h1>
+        <p className="mt-2 text-lg text-gray-500 font-medium">{user.role === 'tenant' ? 'Pasaportun onaylandı. Yeni yuvana bir adım daha yakınsın.' : 'İlanlarınızı ve başvurularınızı güvenle yönetin.'}</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {user.role === 'tenant' ? (
+          <><ActionCard title="Ev Kirala" desc="Doğrulanmış ev sahiplerinden şeffaf bir şekilde kiralık daire bul." icon={Key} color="orange" onClick={() => changeView('search')} /><ActionCard title="Ev Satın Al" desc="Sürpriz masrafsız, onaylı satılık konutlara göz at." icon={Home} color="navy" onClick={() => changeView('search')} /></>
+        ) : (
+          <>
+            <div className="col-span-full grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+               <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-5"><div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center"><Building className="w-7 h-7 text-[#003049]"/></div><div><p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Aktif İlanlar</p><p className="text-3xl font-black text-[#003049]">2</p></div></div>
+               <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-5 border-l-4 border-l-[#E76F2E]"><div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center"><Users className="w-7 h-7 text-[#E76F2E]"/></div><div><p className="text-xs font-bold text-[#E76F2E] uppercase tracking-wider">Yeni Başvuru</p><p className="text-3xl font-black text-[#003049]">14</p></div></div>
+            </div>
+            <div onClick={() => changeView('add-listing')} className="group bg-transparent rounded-[2.5rem] p-8 border-2 border-dashed border-gray-300 hover:border-[#003049] hover:bg-white transition-all duration-300 flex flex-col items-center justify-center cursor-pointer text-center min-h-[250px]">
+              <div className="w-16 h-16 bg-white shadow-sm rounded-full flex items-center justify-center mb-4 group-hover:bg-[#003049] group-hover:scale-110 transition-all duration-300"><Plus className="w-8 h-8 text-gray-400 group-hover:text-white transition-colors" /></div>
+              <h3 className="text-xl font-bold text-gray-500 group-hover:text-[#003049] mb-2">Yeni İlan Ekle</h3>
+              <p className="text-gray-400 text-sm font-medium px-4">Mülkünüzü sisteme yükleyin, hedef skoru belirleyin.</p>
+            </div>
+            <ActionCard title="Mevcut İlanlarım" desc="Aktif ilanlarınızı ve gelen başvuruları yönetin." icon={Building} color="navy" onClick={() => changeView('search')} />
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const ProfileCompletion = ({ user, updateUser, changeView }) => {
+  const [loading, setLoading] = useState(false);
+  const handleSimulateVerification = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      updateUser({ ...user, isProfileComplete: true, score: 850 });
+      changeView('home');
+      alert("Tebrikler! Belgeleriniz onaylandı. Kefilim Skorunuz: 850 (A+)");
+    }, 3000);
+  };
+  return (
+    <div className="max-w-4xl mx-auto animate-in zoom-in-95 duration-500 pb-20">
+      <div className="text-center mb-10"><h2 className="text-3xl md:text-4xl font-black text-[#003049] mb-4">Dijital Pasaportunu Oluştur</h2><p className="text-gray-500 font-medium text-lg max-w-2xl mx-auto">Şifrelerinizi asla istemeyiz. Sadece <strong>barkodlu e-Devlet belgelerinizi</strong> yükleyin.</p></div>
+      <div className="bg-white rounded-[3rem] p-8 md:p-14 shadow-2xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden">
+        {loading ? (
+          <div className="py-20 flex flex-col items-center justify-center text-center"><div className="relative w-32 h-32 mb-8"><div className="absolute inset-0 border-8 border-slate-100 rounded-full"></div><div className="absolute inset-0 border-8 border-[#E76F2E] rounded-full border-t-transparent animate-spin"></div><ShieldCheck className="absolute inset-0 m-auto w-12 h-12 text-[#003049]" /></div><h3 className="text-3xl font-black text-[#003049] mb-3">Yapay Zeka Doğruluyor</h3><p className="text-gray-500 font-medium text-lg max-w-md">Karekodlar anlık teyit ediliyor...</p></div>
+        ) : (
+          <div className="space-y-10">
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="border-2 border-dashed border-slate-300 rounded-[2rem] p-10 text-center hover:border-[#E76F2E] hover:bg-orange-50/30 transition-all cursor-pointer group"><div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-[#E76F2E] transition-colors"><UploadCloud className="w-10 h-10 text-slate-400 group-hover:text-white" /></div><h4 className="font-extrabold text-[#003049] text-xl mb-2">SGK Hizmet Dökümü</h4><p className="text-sm text-gray-500 font-medium">Barkodlu PDF formatında yükleyin.</p></div>
+              <div className="border-2 border-dashed border-slate-300 rounded-[2rem] p-10 text-center hover:border-[#003049] hover:bg-slate-50 transition-all cursor-pointer group"><div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-[#003049] transition-colors"><FileText className="w-10 h-10 text-slate-400 group-hover:text-white" /></div><h4 className="font-extrabold text-[#003049] text-xl mb-2">Adli Sicil Kaydı</h4><p className="text-sm text-gray-500 font-medium">Barkodlu PDF formatında yükleyin.</p></div>
+            </div>
+            <button onClick={handleSimulateVerification} className="w-full bg-[#003049] hover:bg-[#E76F2E] text-white py-6 rounded-3xl font-black text-xl transition-all duration-300 shadow-xl shadow-[#003049]/20 transform hover:-translate-y-1 flex justify-center items-center gap-3">Belgeleri Yükledim, Pasaportumu Doğrula <ChevronRight size={24} /></button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const AddListing = ({ changeView }) => (
+  <div className="max-w-4xl mx-auto pb-20 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="mb-10"><h2 className="text-3xl md:text-4xl font-black text-[#003049] mb-2">Yeni İlan Ekle</h2><p className="text-gray-500 font-medium text-lg">Mülkünüzü sisteme kaydedin ve hedef kitlenizi "Güven Skoruna" göre belirleyin.</p></div>
+    <div className="bg-white rounded-[3rem] shadow-2xl shadow-slate-200/40 border border-slate-100 p-8 md:p-14 space-y-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div><label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 pl-2">İşlem Türü</label><select className="w-full bg-slate-50 border border-slate-200 px-6 py-5 rounded-3xl outline-none focus:border-[#003049] text-[#003049] font-bold text-lg"><option>Kiralık Konut</option><option>Satılık Konut</option></select></div>
+        <div><label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 pl-2">Fiyat (TL)</label><input type="number" className="w-full bg-slate-50 border border-slate-200 px-6 py-5 rounded-3xl outline-none focus:border-[#003049] text-[#003049] font-bold text-lg" placeholder="Örn: 25.000" /></div>
+      </div>
+      <div className="bg-orange-50/60 border border-orange-100 p-8 md:p-10 rounded-[2.5rem] relative overflow-hidden">
+        <ShieldCheck className="absolute -right-10 -bottom-10 w-48 h-48 text-[#E76F2E] opacity-5 pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center">
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm"><ShieldCheck className="w-8 h-8 text-[#E76F2E]" /></div>
+          <div className="flex-1 w-full"><h3 className="text-xl font-black text-[#003049] mb-2">Minimum Kefilim Skoru Beklentisi</h3><p className="text-sm text-gray-600 font-medium mb-8">İlanınıza başvuracak adaylarda aradığınız minimum güven puanını belirleyin.</p>
+            <div className="flex items-center gap-6"><input type="range" min="0" max="1000" defaultValue="700" className="w-full h-3 bg-white rounded-xl appearance-none cursor-pointer shadow-inner accent-[#E76F2E]" /><div className="bg-[#003049] text-white font-black px-6 py-3 rounded-2xl shrink-0 text-lg shadow-md">Min. 700</div></div>
+            <div className="flex justify-between text-xs font-bold text-gray-400 mt-4 px-1"><span>0 (Herkese Açık)</span><span className="text-[#E76F2E]">Güvenilir (700+)</span><span>1000 (A+)</span></div>
+          </div>
+        </div>
+      </div>
+      <button onClick={() => { alert("İlanınız başarıyla yayına alındı!"); changeView('home'); }} className="w-full bg-[#003049] hover:bg-[#E76F2E] text-white py-6 rounded-3xl font-black text-xl transition-all duration-300 shadow-xl flex justify-center items-center gap-3 transform hover:-translate-y-1">İlanı Yayınla <CheckCircle size={24} /></button>
+    </div>
+  </div>
+);
+
+const MenuButton = ({ icon, label, isActive, onClick, disabled, badge }) => (
+  <button onClick={!disabled ? onClick : undefined} className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 ${disabled ? 'opacity-40 cursor-not-allowed text-gray-400' : isActive ? 'bg-[#003049] text-white shadow-lg shadow-[#003049]/20' : 'text-gray-500 hover:bg-slate-50 hover:text-[#003049] font-bold'} ${!isActive && !disabled && 'font-bold'}`}>
+    <div className="flex items-center gap-4"><div className={`w-6 h-6 ${isActive ? 'text-white' : ''}`}>{icon}</div><span>{label}</span></div>
+    {badge && <span className="bg-red-500 text-white text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">{badge}</span>}
+  </button>
+);
+
+const ActionCard = ({ title, desc, icon: Icon, color, onClick, disabled }) => {
+  const isOrange = color === 'orange';
+  return (
+    <div onClick={!disabled ? onClick : undefined} className={`group bg-white rounded-[2.5rem] p-8 border border-slate-100 flex flex-col justify-center relative overflow-hidden min-h-[250px] ${disabled ? 'opacity-50 grayscale' : 'shadow-xl shadow-slate-200/40 hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-300 cursor-pointer'}`}>
+      {!disabled && <div className={`absolute top-0 right-0 w-32 h-32 rounded-bl-full -z-10 transition-transform duration-500 group-hover:scale-125 ${isOrange ? 'bg-orange-50' : 'bg-blue-50'}`}></div>}
+      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-colors duration-300 ${disabled ? 'bg-slate-100 text-slate-400' : (isOrange ? 'bg-orange-50 text-[#E76F2E] group-hover:bg-[#E76F2E] group-hover:text-white' : 'bg-blue-50 text-[#003049] group-hover:bg-[#003049] group-hover:text-white')}`}><Icon className="w-7 h-7" /></div>
+      <h3 className="text-2xl font-black text-[#003049] mb-3">{title}</h3>
+      <p className="text-gray-500 font-medium leading-relaxed">{desc}</p>
+      {!disabled && <div className={`mt-auto flex items-center font-bold transition-all duration-300 group-hover:gap-3 ${isOrange ? 'text-[#E76F2E]' : 'text-[#003049]'}`}>Hemen İncele <ChevronRight className="w-5 h-5 ml-2" /></div>}
+    </div>
+  );
+};
+
