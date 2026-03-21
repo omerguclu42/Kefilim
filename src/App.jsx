@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, Component } from 'react';
 import { 
   Mail, Lock, User, ChevronRight, Home, 
   ShieldCheck, HelpCircle, Target, Users, 
   BarChart3, ArrowLeft, CheckCircle2, 
   Zap, Scale, HeartHandshake, Award,
   FileCheck, Key, Shield, ArrowRight, FileText, Briefcase,
-  Building, Plus, LogOut, Bell, AlertCircle, UploadCloud, CheckCircle, MapPin
+  Building, Plus, LogOut, Bell, AlertCircle, UploadCloud, CheckCircle, MapPin, Search
 } from 'lucide-react';
+import companyLogo from '../ŞirketLogosu.jpg';
 
 const mockDB = [
-  { id: 1, email: 'omerguclu42@gmail.com', password: '123456', role: 'tenant', name: 'Ömer Güçlü', title: 'Kiracı Adayı', isProfileComplete: false, score: null },
-  { id: 2, email: 'omerguclu43@gmail.com', password: '123456', role: 'landlord', name: 'Ömer Güçlü', title: 'Ev Sahibi', isProfileComplete: true, score: 920 },
+  { id: 1, email: 'omerguclu42@gmail.com', password: '123456', role: 'tenant', name: 'Ömer Güçlü', title: 'Kiracı/Alıcı Adayı', isProfileComplete: false, score: null },
+  { id: 2, email: 'omerguclu43@gmail.com', password: '123456', role: 'landlord', name: 'Ömer Güçlü', title: 'Ev Sahibi/Satıcı', isProfileComplete: true, score: 920 },
   { id: 3, email: 'omerguclu44@gmail.com', password: '123456', role: 'agent', name: 'Güçlü Emlak', title: 'Gayrimenkul Danışmanı', isProfileComplete: true, score: 950 }
 ];
 
@@ -19,12 +20,46 @@ const COLORS = {
   orange: '#E76F2E'
 };
 
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  componentDidCatch(error, errorInfo) {
+    this.setState({ error, errorInfo });
+    console.error("UI Hatası:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '40px', background: '#fff0f0', color: '#8b0000', fontFamily: 'sans-serif' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold' }}>Sistem Hatası (Beyaz Ekran Tespit Edildi)</h2>
+          <p style={{ marginTop: '10px' }}>Lütfen bu hata kodunu bana kopyalayıp gönder:</p>
+          <pre style={{ background: '#333', color: '#fff', padding: '20px', borderRadius: '8px', overflowX: 'auto', marginTop: '20px' }}>
+            {this.state.error && this.state.error.toString()}
+            <br />
+            {this.state.errorInfo && this.state.errorInfo.componentStack}
+          </pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [dashboardView, setDashboardView] = useState('home');
 
   if (currentUser) {
-    return <DashboardLayout currentUser={currentUser} setCurrentUser={setCurrentUser} activeView={dashboardView} setActiveView={setDashboardView} />;
+    return (
+      <ErrorBoundary>
+        <DashboardLayout currentUser={currentUser} setCurrentUser={setCurrentUser} activeView={dashboardView} setActiveView={setDashboardView} />
+      </ErrorBoundary>
+    );
   }
 
   return <LandingPage onLogin={(user) => { setCurrentUser(user); setDashboardView('home'); }} />;
@@ -45,7 +80,7 @@ const LandingPage = ({ onLogin }) => {
       if (user) onLogin(user);
       else setError('Hatalı e-posta veya şifre! Lütfen test hesaplarını kullanın.');
     } else {
-      onLogin({ id: Date.now(), email, password, role, name: 'Yeni Kullanıcı', title: role === 'tenant' ? 'Aday' : 'Ev Sahibi', isProfileComplete: false, score: null });
+      onLogin({ id: Date.now(), email, password, role, name: 'Yeni Kullanıcı', title: role === 'tenant' ? 'Kiracı/Alıcı' : 'Ev Sahibi/Satıcı', isProfileComplete: false, score: null });
     }
   };
 
@@ -464,10 +499,9 @@ const DashboardLayout = ({ currentUser, setCurrentUser, activeView, setActiveVie
       {/* SOL MENÜ (SIDEBAR) */}
       <aside className="w-72 bg-white border-r border-slate-100 hidden md:flex flex-col shadow-2xl shadow-slate-200/20 z-20">
         <div className="p-8 pb-6 flex items-center gap-3 cursor-pointer" onClick={() => setActiveView('home')}>
-          <ShieldCheck className="w-10 h-10 text-[#E76F2E]" />
+          <img src={companyLogo} alt="Kefilim Logo" className="w-10 h-10 object-contain mix-blend-multiply" />
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-[#003049] leading-none">KEFİLİM</h1>
-            <p className="text-[#E76F2E] text-[10px] font-bold tracking-widest uppercase mt-1">Güven Sistemi</p>
+            <h1 className="text-3xl font-black tracking-tight text-[#003049] leading-none mt-1">KEFİLİM</h1>
           </div>
         </div>
 
@@ -476,8 +510,8 @@ const DashboardLayout = ({ currentUser, setCurrentUser, activeView, setActiveVie
           {currentUser.role === 'tenant' && (
             <>
               <MenuButton icon={<User />} label="Profilimi Tamamla" isActive={activeView === 'profile'} onClick={() => setActiveView('profile')} badge={!currentUser.isProfileComplete ? "Eksik" : null} />
-              <MenuButton icon={<Search />} label="İlan Ara" isActive={activeView === 'search'} onClick={() => currentUser.isProfileComplete ? setActiveView('search') : alert("Lütfen önce profilinizi tamamlayın!")} disabled={!currentUser.isProfileComplete} />
-              <MenuButton icon={<FileText />} label="Başvurularım" isActive={false} onClick={() => {}} disabled={!currentUser.isProfileComplete} />
+              <MenuButton icon={<Search />} label="İlan Ara" isActive={activeView === 'search'} onClick={() => setActiveView('search')} />
+              <MenuButton icon={<FileText />} label="Başvurularım" isActive={false} onClick={() => {}} />
             </>
           )}
           {(currentUser.role === 'landlord' || currentUser.role === 'agent') && (
@@ -542,7 +576,22 @@ const DashboardLayout = ({ currentUser, setCurrentUser, activeView, setActiveVie
             <div className="text-center py-20 flex flex-col items-center">
               <MapPin className="w-16 h-16 text-slate-300 mb-4" />
               <h2 className="text-2xl font-bold text-[#003049]">İlan Modülü</h2>
-              <p className="text-gray-500 font-medium">Bu ekran (Harita, ilan kartları ve filtreler) bir sonraki aşamada tasarlanacak.</p>
+              <p className="text-gray-500 font-medium mb-10">Bu ekran (Harita, ilan kartları ve filtreler) bir sonraki aşamada tasarlanacak.</p>
+              
+              {currentUser.role === 'tenant' && (
+                <button 
+                  onClick={() => {
+                    if(!currentUser.isProfileComplete) {
+                      alert("GÜVENLİK UYARISI \nİlanlara başvurabilmek ve ev sahipleriyle eşleşebilmek için lütfen önce profilinizi ve e-Devlet evraklarınızı tamamlayın.");
+                    } else {
+                      alert("Tebrikler! Güven puanınız yüksek (A+). Başvurunuz başarıyla ilan sahibine iletildi.");
+                    }
+                  }}
+                  className="bg-[#003049] text-white hover:bg-[#E76F2E] px-8 py-4 rounded-xl font-black transition-all duration-300 transform hover:-translate-y-1 shadow-xl flex items-center gap-3"
+                >
+                  <Home size={20} /> Örnek Bir İlana Başvur
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -552,36 +601,31 @@ const DashboardLayout = ({ currentUser, setCurrentUser, activeView, setActiveVie
 };
 
 const Dashboard = ({ user, changeView }) => {
-  if (user.role === 'tenant' && !user.isProfileComplete) {
-    return (
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-[#003049] mb-8">Merhaba, {user.name.split(' ')[0]}.</h1>
-        <div className="bg-gradient-to-r from-[#003049] to-[#0a4666] rounded-[3rem] p-8 md:p-14 shadow-2xl text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10">
-          <ShieldCheck className="absolute -right-20 -bottom-20 w-80 h-80 text-white opacity-5" />
-          <div className="relative z-10 max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full font-bold text-sm mb-6 shadow-lg shadow-red-500/30"><Lock size={16} /> Profil Eksik, Sistem Kilitli</div>
-            <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">Adım Atmadan Önce<br/><span className="text-[#E76F2E]">Güvenini</span> Kanıtla!</h2>
-            <p className="text-blue-100/90 text-lg mb-8 font-medium leading-relaxed">Kefilim ekosisteminde ev arayabilmek için öncelikle e-Devlet evraklarını yükleyerek <strong>Dijital Pasaportunu</strong> oluşturman gerekiyor.</p>
-            <button onClick={() => changeView('profile')} className="bg-white text-[#003049] hover:bg-[#E76F2E] hover:text-white px-8 py-5 rounded-2xl font-black text-lg shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-3 w-full md:w-auto justify-center"><User size={24} /> Profilini Tamamla ve Kilidi Aç</button>
-          </div>
-        </div>
-        <h3 className="text-xl font-bold text-[#003049] pl-2 mt-12 mb-6 opacity-50">Kefilim Vitrini</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
-          <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] z-10 rounded-[3rem] flex items-center justify-center border border-white/50">
-            <div className="bg-white px-8 py-4 rounded-2xl shadow-xl font-bold text-[#003049] flex items-center gap-3 border border-slate-100"><Lock className="w-6 h-6 text-[#E76F2E]" /> İşlem yapabilmek için profili tamamlayın</div>
-          </div>
-          <ActionCard title="Ev Kirala" desc="Doğrulanmış ilanlar arasında güvenle ara." icon={Key} disabled />
-          <ActionCard title="Ev Satın Al" desc="Uzman ekspertizli satılık konutlar." icon={Home} disabled />
-        </div>
-      </div>
-    );
-  }
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-10">
       <div>
         <h1 className="text-3xl md:text-4xl font-extrabold text-[#003049] tracking-tight">Hoş Geldin, {user.name.split(' ')[0]}.</h1>
-        <p className="mt-2 text-lg text-gray-500 font-medium">{user.role === 'tenant' ? 'Pasaportun onaylandı. Yeni yuvana bir adım daha yakınsın.' : 'İlanlarınızı ve başvurularınızı güvenle yönetin.'}</p>
+        <p className="mt-2 text-lg text-gray-500 font-medium">
+          {user.role === 'tenant' 
+            ? (user.isProfileComplete ? 'Pasaportun onaylandı. Yeni yuvana bir adım daha yakınsın.' : 'Profiliniz eksik. Profilinizi tamamlamadan işlem yapamazsınız.') 
+            : 'İlanlarınızı ve başvurularınızı güvenle yönetin.'}
+        </p>
       </div>
+
+      {user.role === 'tenant' && !user.isProfileComplete && (
+        <div className="bg-orange-50 border border-orange-200 rounded-[2rem] p-6 flex flex-col md:flex-row items-center gap-6 shadow-sm">
+          <div className="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center shrink-0">
+            <Lock className="w-8 h-8 text-[#E76F2E]" />
+          </div>
+          <div>
+            <h4 className="text-lg font-bold text-[#003049] mb-1">Pasaportunuz Henüz Oluşturulmadı</h4>
+            <p className="text-gray-500 text-sm font-medium">Sistemde arama yapabilirsiniz ancak işlem yapabilmeniz için doğrulanmış profil şarttır.</p>
+          </div>
+          <button onClick={() => changeView('profile')} className="ml-0 md:ml-auto w-full md:w-auto bg-[#E76F2E] hover:bg-[#003049] text-white px-6 py-3 rounded-xl font-bold transition-colors shadow-md text-nowrap mt-4 md:mt-0">
+            Profili Tamamla
+          </button>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {user.role === 'tenant' ? (
           <><ActionCard title="Ev Kirala" desc="Doğrulanmış ev sahiplerinden şeffaf bir şekilde kiralık daire bul." icon={Key} color="orange" onClick={() => changeView('search')} /><ActionCard title="Ev Satın Al" desc="Sürpriz masrafsız, onaylı satılık konutlara göz at." icon={Home} color="navy" onClick={() => changeView('search')} /></>
@@ -622,13 +666,32 @@ const ProfileCompletion = ({ user, updateUser, changeView }) => {
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center text-center"><div className="relative w-32 h-32 mb-8"><div className="absolute inset-0 border-8 border-slate-100 rounded-full"></div><div className="absolute inset-0 border-8 border-[#E76F2E] rounded-full border-t-transparent animate-spin"></div><ShieldCheck className="absolute inset-0 m-auto w-12 h-12 text-[#003049]" /></div><h3 className="text-3xl font-black text-[#003049] mb-3">Yapay Zeka Doğruluyor</h3><p className="text-gray-500 font-medium text-lg max-w-md">Karekodlar anlık teyit ediliyor...</p></div>
         ) : (
-          <div className="space-y-10">
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="border-2 border-dashed border-slate-300 rounded-[2rem] p-10 text-center hover:border-[#E76F2E] hover:bg-orange-50/30 transition-all cursor-pointer group"><div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-[#E76F2E] transition-colors"><UploadCloud className="w-10 h-10 text-slate-400 group-hover:text-white" /></div><h4 className="font-extrabold text-[#003049] text-xl mb-2">SGK Hizmet Dökümü</h4><p className="text-sm text-gray-500 font-medium">Barkodlu PDF formatında yükleyin.</p></div>
-              <div className="border-2 border-dashed border-slate-300 rounded-[2rem] p-10 text-center hover:border-[#003049] hover:bg-slate-50 transition-all cursor-pointer group"><div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-[#003049] transition-colors"><FileText className="w-10 h-10 text-slate-400 group-hover:text-white" /></div><h4 className="font-extrabold text-[#003049] text-xl mb-2">Adli Sicil Kaydı</h4><p className="text-sm text-gray-500 font-medium">Barkodlu PDF formatında yükleyin.</p></div>
+          <div className="space-y-8">
+            <div className="flex flex-col gap-4">
+              {[
+                { title: "SGK Hizmet Dökümü", desc: "e-Devlet'ten alınmış barkodlu SGK hizmet dökümü belgesi." },
+                { title: "Adli Sicil Kaydı", desc: "e-Devlet üzerinden alınmış resmi sicil kaydı." },
+                { title: "UYAP İcra Dosyası Sorgulama", desc: "Hakkınızda açılmış icra veya dava dosyası olup olmadığına dair belge." },
+                { title: "Kredi Findeks Risk Raporu", desc: "Geçmiş ödeme performansınızı ve güncel kredi notunuzu (puanınızı) gösteren rapor." },
+                { title: "Tarihçeli Yerleşim Yeri Belgesi", desc: "e-Devlet adres geçmişinizi ve kaç kez taşındığınızı gösterir taşıma belgesi." }
+              ].map((doc, idx) => (
+                <div key={idx} className="border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-[1.5rem] p-5 md:p-6 flex flex-col md:flex-row items-center gap-5 md:gap-6 hover:border-[#E76F2E] hover:bg-orange-50/30 transition-all cursor-pointer group">
+                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100 group-hover:bg-[#E76F2E] transition-colors">
+                    <UploadCloud className="w-8 h-8 text-slate-400 group-hover:text-white transition-colors" />
+                  </div>
+                  <div className="flex-1 text-center md:text-left">
+                    <h4 className="font-extrabold text-[#003049] text-lg mb-1">{doc.title}</h4>
+                    <p className="text-sm text-gray-500 font-medium">{doc.desc}</p>
+                  </div>
+                  <div className="w-full md:w-auto px-6 py-4 md:py-3 bg-white text-[#003049] font-bold rounded-xl border border-slate-200 shadow-sm group-hover:bg-[#E76F2E] group-hover:text-white group-hover:border-[#E76F2E] transition-colors text-center shrink-0">
+                    PDF Yükle
+                  </div>
+                </div>
+              ))}
             </div>
-            <button onClick={handleSimulateVerification} className="w-full bg-[#003049] hover:bg-[#E76F2E] text-white py-6 rounded-3xl font-black text-xl transition-all duration-300 shadow-xl shadow-[#003049]/20 transform hover:-translate-y-1 flex justify-center items-center gap-3">Belgeleri Yükledim, Pasaportumu Doğrula <ChevronRight size={24} /></button>
+            <button onClick={handleSimulateVerification} className="w-full bg-[#003049] hover:bg-[#E76F2E] text-white py-6 rounded-3xl font-black text-xl transition-all duration-300 shadow-xl shadow-[#003049]/20 transform hover:-translate-y-1 flex justify-center items-center gap-3">Tüm Belgeleri Yükledim, Pasaportumu Doğrula <ChevronRight size={24} /></button>
           </div>
+
         )}
       </div>
     </div>
